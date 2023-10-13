@@ -69,7 +69,7 @@ class BookController extends Controller
                     //@todo créer une nouvelle instance de CommentRepository
                     //@todo Créer une nouvelle instance de commentaire en settant le book id et l'id de l'utilisateur connecté (User::getCurrentUserId())
                     // $comment
-
+                   
 
                     if (isset($_POST['saveComment'])) {
                         if (!User::isLogged()) {
@@ -155,24 +155,25 @@ class BookController extends Controller
             }
 
             // @todo Récupération des types
-            
-
-            // @todo Récupération des auteurs
-        
+            $book->getTypeId();
+            // @todo Récupération des auteur
+            $book->getAuthorId();
 
             if (isset($_POST['saveBook'])) {
                 //@todo envoyer les données post à la méthode hydrate de l'objet $book
                 
-
+                $book->hydrate($_POST);
                 //@todo appeler la méthode validate de l'objet book pour récupérer les erreurs (titre vide)
                 
-
+                $book->validate();
                 // Si pas d'erreur on peut traiter l'upload de fichier
                 if (empty($errors)) {
                     $fileErrors = [];
                     // On lance l'upload de fichier
                     if (isset($_FILES['file']['tmp_name']) && $_FILES['file']['tmp_name'] !== '') {
                         //@todo appeler la méthode static uploadImage de la classe FileTools et stocker le résultat dans $res
+                        
+
                         
                         if (empty($res['errors'])) {
                             //@todo décommenter cette ligne
@@ -184,8 +185,11 @@ class BookController extends Controller
                     if (empty($fileErrors)) {
                         // @todo si pas d'erreur alors on appelle persit de bookRepository en passant $book
 
+                        $newBook = $bookRepository->persist($book);
 
                         // @todo On redirige vers la page du livre (avec header location)
+                        header("Location: index.php?controller=book&action=show&id=" . $newBook->getId());
+
                         
                     } else {
                         $errors = array_merge($errors, $fileErrors);
@@ -219,15 +223,16 @@ class BookController extends Controller
             $page = 1;
         }
 
-        //@todo récupérer les tous les livres (avec pagination plus tard)
-
+         //@todo récupérer les tous les livres (avec pagination plus tard
+        $books = $bookRepository->findAll(_ITEM_PER_PAGE_, $page);
         //@todo pour la pagination, on a besoin de connaitre le nombre total de livres
-
+        $allBooks = $bookRepository->count();
         //@todo pour la pagination on a besoin de connaitre le nombre de pages
+        $totalPages = ceil($allBooks / _ITEM_PER_PAGE_);
 
 
         $this->render('book/list', [
-            'books' => '',
+            'books' => $books,
             'totalPages' => '',
             'page' => '',
         ]);
